@@ -832,24 +832,27 @@ function isTargetMessage(message) {
 }
 
 
-function isThankYouMessage(text) {
+function getThankYouKeyword(text) {
 
     const normalized =
         normalizeText(text)
 
     if (!normalized) {
-        return false
+        return ''
     }
 
 
-    return THANK_YOU_KEYWORDS.some(
-        keyword => {
-
-            return normalized.includes(
-                keyword
-            )
-        }
+    return (
+        THANK_YOU_KEYWORDS.find(
+            keyword => normalized.includes(keyword)
+        ) || ''
     )
+}
+
+
+function isThankYouMessage(text) {
+
+    return !!getThankYouKeyword(text)
 }
 
 
@@ -862,6 +865,10 @@ async function processTargetAutoReply(message) {
 
     const remoteJid =
         message.key?.remoteJid || ''
+
+
+    const messageId =
+        message.key?.id || '-'
 
 
     rememberIdentity(message)
@@ -900,10 +907,19 @@ async function processTargetAutoReply(message) {
         getMessageText(message)
 
 
-    if (!isThankYouMessage(text)) {
+    const keyword =
+        getThankYouKeyword(text)
+
+
+    if (!keyword) {
 
         return false
     }
+
+
+    console.log(
+        `🔎 [AUTO-REPLY] Terima kasih terdeteksi | ID ${messageId} | Dari ${remoteJid} | PN ${message.key?.senderPn || '-'} | Keyword "${keyword}"`
+    )
 
 
     // ========================================================
@@ -913,7 +929,7 @@ async function processTargetAutoReply(message) {
     if (!isTargetMessage(message)) {
 
         console.log(
-            `⏭️ Auto-reply dilewati: terima kasih dari non-target ${remoteJid} (PN ${message.key?.senderPn || '-'})`
+            `⏭️ [AUTO-REPLY] Dilewati: pengirim bukan target | ID ${messageId} | ${remoteJid} | PN ${message.key?.senderPn || '-'}`
         )
 
         return false
@@ -927,7 +943,7 @@ async function processTargetAutoReply(message) {
     if (!isBotActiveTime()) {
 
         console.log(
-            `⏸️ Auto-reply standby. Bot active: ${runtimeConfig.schedule.botActive.start}-${runtimeConfig.schedule.botActive.end}`
+            `⏸️ [AUTO-REPLY] Standby: di luar jam aktif ${runtimeConfig.schedule.botActive.start}-${runtimeConfig.schedule.botActive.end} | ID ${messageId} | ${remoteJid}`
         )
 
         return false
@@ -940,19 +956,35 @@ async function processTargetAutoReply(message) {
     )
 
     console.log(
-        '🤖 AUTO REPLY TERIMA KASIH'
+        '🤖 [AUTO-REPLY] TERIMA KASIH'
     )
 
     console.log(
-        `👤 Dari    : ${remoteJid}`
+        `🆔 Message ID : ${messageId}`
     )
 
     console.log(
-        `📝 Pesan   : ${text}`
+        `👤 Remote JID : ${remoteJid}`
     )
 
     console.log(
-        `💬 Balasan : ${AUTO_REPLY_TEXT}`
+        `👥 PN / LID   : ${message.key?.senderPn || '-'} / ${message.key?.senderLid || '-'}`
+    )
+
+    console.log(
+        `🔑 Keyword    : ${keyword}`
+    )
+
+    console.log(
+        `📝 Pesan      : ${text}`
+    )
+
+    console.log(
+        `💬 Balasan    : ${AUTO_REPLY_TEXT}`
+    )
+
+    console.log(
+        `⏳ Jeda       : ${AUTO_REPLY_DELAY / 1000} detik`
     )
 
     console.log(
@@ -961,9 +993,11 @@ async function processTargetAutoReply(message) {
 
 
     const socket = sock
+    const waitStartedAt = Date.now()
+
 
     console.log(
-        `⏳ Auto reply dikirim dalam ${AUTO_REPLY_DELAY / 1000} detik`
+        `⏳ [AUTO-REPLY] Menunggu ${AUTO_REPLY_DELAY / 1000} detik sebelum membalas | ID ${messageId}`
     )
 
 
@@ -975,6 +1009,11 @@ async function processTargetAutoReply(message) {
 
     try {
 
+        console.log(
+            `📤 [AUTO-REPLY] Mengirim balasan ke ${remoteJid} | ID ${messageId}`
+        )
+
+
         await socket.sendMessage(
             remoteJid,
             {
@@ -983,8 +1022,12 @@ async function processTargetAutoReply(message) {
         )
 
 
+        const elapsed =
+            ((Date.now() - waitStartedAt) / 1000).toFixed(1)
+
+
         console.log(
-            '✅ Auto reply berhasil dikirim'
+            `✅ [AUTO-REPLY] Terkirim dalam ${elapsed}s | ID ${messageId} | Ke ${remoteJid}`
         )
 
         return true
@@ -992,7 +1035,7 @@ async function processTargetAutoReply(message) {
     } catch (error) {
 
         console.error(
-            '❌ Gagal mengirim auto reply:',
+            `❌ [AUTO-REPLY] Gagal mengirim | ID ${messageId} | Ke ${remoteJid}:`,
             error.message
         )
 
