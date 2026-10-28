@@ -438,6 +438,9 @@ const THANK_YOU_KEYWORDS = [
 const AUTO_REPLY_TEXT =
     'Nggih Pak, sama-sama 🙏'
 
+// Jeda sebelum membalas agar terlihat natural
+const AUTO_REPLY_DELAY = 10000
+
 
 // ============================================================
 // RUNTIME STATE
@@ -957,9 +960,22 @@ async function processTargetAutoReply(message) {
     )
 
 
+    const socket = sock
+
+    console.log(
+        `⏳ Auto reply dikirim dalam ${AUTO_REPLY_DELAY / 1000} detik`
+    )
+
+
+    await new Promise(resolve => {
+
+        setTimeout(resolve, AUTO_REPLY_DELAY)
+    })
+
+
     try {
 
-        await sock.sendMessage(
+        await socket.sendMessage(
             remoteJid,
             {
                 text: AUTO_REPLY_TEXT
