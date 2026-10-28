@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Bot Forward · Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2325d366'/%3E%3Cpath d='M18 20h28v18H30l-8 7v-7h-4z' fill='%23081510'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="/style.css?v=20261028b">
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand">
+            <div class="logo" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 21l2.1-5.3A8.5 8.5 0 1 1 21 11.5z"></path>
+                    <path d="M8 12h8"></path>
+                    <path d="M13 9l3 3-3 3"></path>
+                </svg>
+            </div>
+            <div class="brand-text">
+                <h1>Bot Forward</h1>
+                <p>WhatsApp forwarding · log &amp; kontrol</p>
+            </div>
+        </div>
+
+        <div class="top-status">
+            <span class="pill" id="statusPill">
+                <span class="dot" id="statusDot"></span>
+                <span id="statusText">Memuat…</span>
+            </span>
+            <span class="clock" id="serverClock">--:--:--</span>
+            <button class="btn ghost small lock-btn" id="lockBtn" type="button" aria-haspopup="dialog">
+                <span id="lockBtnText">Unlock</span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <section class="grid">
+            <article class="card connection-card">
+                <div class="card-head">
+                    <h2>Koneksi WhatsApp</h2>
+                    <div class="head-actions">
+                        <button class="btn ghost small hidden" id="resetSessionBtn" type="button">Reset sesi</button>
+                        <span class="tag" id="connTag">-</span>
+                    </div>
+                </div>
+
+                <dl class="meta">
+                    <div>
+                        <dt>Akun</dt>
+                        <dd id="connMe">-</dd>
+                    </div>
+                    <div>
+                        <dt>Terhubung sejak</dt>
+                        <dd id="connSince">-</dd>
+                    </div>
+                    <div>
+                        <dt>Terakhir update</dt>
+                        <dd id="connUpdated">-</dd>
+                    </div>
+                </dl>
+
+                <p class="error hidden" id="connError"></p>
+
+                <div class="qr-wrap hidden" id="qrWrap">
+                    <div class="qr-frame">
+                        <img id="qrImg" alt="QR code WhatsApp">
+                    </div>
+                    <p class="qr-note">
+                        Scan dari <strong>WhatsApp → Perangkat tertaut → Tautkan perangkat</strong>.
+                        QR akan hilang otomatis begitu login berhasil.
+                    </p>
+                </div>
+
+                <p class="hint" id="qrIdle">
+                    QR akan muncul di sini ketika bot membutuhkan login.
+                </p>
+            </article>
+
+            <article class="card schedule-card">
+                <div class="card-head">
+                    <h2>Jadwal</h2>
+                    <span class="tag" id="timezoneTag">-</span>
+                </div>
+
+                <div class="schedule-row">
+                    <div class="schedule-block">
+                        <span class="schedule-label">Bot aktif</span>
+                        <div class="time-range">
+                            <input type="time" id="activeStart" aria-label="Jam mulai bot aktif">
+                            <span class="time-sep">s/d</span>
+                            <input type="time" id="activeEnd" aria-label="Jam selesai bot aktif">
+                        </div>
+                    </div>
+                    <span class="badge" id="activeBadge">-</span>
+                </div>
+
+                <div class="schedule-row">
+                    <div class="schedule-block">
+                        <span class="schedule-label">Jam forward</span>
+                        <div class="time-range">
+                            <input type="time" id="forwardStart" aria-label="Jam mulai forward">
+                            <span class="time-sep">s/d</span>
+                            <input type="time" id="forwardEnd" aria-label="Jam selesai forward">
+                        </div>
+                    </div>
+                    <span class="badge" id="forwardBadge">-</span>
+                </div>
+
+                <p class="hint">
+                    Jam boleh melewati tengah malam (mis. 22:00 s/d 06:00).
+                    Perubahan ikut tersimpan lewat tombol Simpan.
+                </p>
+            </article>
+
+            <article class="card wide">
+                <div class="card-head">
+                    <div>
+                        <h2>Grup sumber</h2>
+                        <p class="hint">Hanya pesan dari grup di daftar ini yang diproses.</p>
+                    </div>
+                    <span class="counter" id="sourceCount">0 grup</span>
+                </div>
+
+                <ul class="item-list" id="sourceList"></ul>
+
+                <div class="add-grid">
+                    <select id="groupSelect" aria-label="Pilih grup terdeteksi">
+                        <option value="">Pilih grup terdeteksi…</option>
+                    </select>
+                    <input id="sourceName" type="text" placeholder="Label (opsional)" maxlength="120">
+                    <button class="btn ghost" id="addSourceBtn" type="button">Tambah</button>
+                </div>
+
+                <div class="inline-tools">
+                    <button class="link-btn" id="refreshGroupsBtn" type="button">Muat ulang daftar grup</button>
+                </div>
+
+                <details class="manual">
+                    <summary>Tambah manual dengan ID grup</summary>
+                    <div class="add-grid">
+                        <input id="sourceId" type="text" placeholder="1203xxxxxxxx@g.us" autocomplete="off" spellcheck="false">
+                        <input id="sourceManualName" type="text" placeholder="Label (opsional)" maxlength="120">
+                        <button class="btn ghost" id="addSourceManualBtn" type="button">Tambah</button>
+                    </div>
+                </details>
+            </article>
+
+            <article class="card wide">
+                <div class="card-head">
+                    <div>
+                        <h2>Penerima forward</h2>
+                        <p class="hint">Nomor WA, JID pengguna (@lid), atau grup tujuan (@g.us).</p>
+                    </div>
+                    <span class="counter" id="targetCount">0 penerima</span>
+                </div>
+
+                <ul class="item-list" id="targetList"></ul>
+
+                <div class="add-grid">
+                    <input id="targetId" type="text" placeholder="628123456789 atau 123456789@lid" autocomplete="off" spellcheck="false">
+                    <input id="targetName" type="text" placeholder="Label (opsional)" maxlength="120">
+                    <button class="btn ghost" id="addTargetBtn" type="button">Tambah</button>
+                </div>
+
+                <p class="hint" id="targetHint">
+                    Nomor tanpa awalan @ akan otomatis diubah menjadi <code>@s.whatsapp.net</code>.
+                </p>
+            </article>
+        </section>
+
+        <div class="savebar" id="savebar">
+            <span class="save-state" id="saveState">Konfigurasi tersimpan</span>
+            <button class="btn primary" id="saveBtn" type="button" disabled>Simpan perubahan</button>
+        </div>
+
+        <section class="card logs-card">
+            <div class="card-head logs-head">
+                <div>
+                    <h2>Log bot</h2>
+                    <p class="hint">Streaming langsung dari service <code>bot-forward</code>.</p>
+                </div>
+
+                <div class="log-tools">
+                    <input id="logFilter" type="search" placeholder="Cari log…" aria-label="Cari log">
+                    <label class="check">
+                        <input type="checkbox" id="autoScroll" checked>
+                        Auto-scroll
+                    </label>
+                    <button class="btn ghost small" id="clearLogs" type="button">Bersihkan</button>
+                </div>
+            </div>
+
+            <pre class="log-view" id="logView" aria-live="polite"></pre>
+
+            <div class="logs-foot">
+                <span id="logCount">0 baris</span>
+                <span class="live" id="wsState"><span class="dot"></span> live</span>
+            </div>
+        </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <dialog class="lock-dialog" id="unlockDialog">
+        <form id="unlockForm">
+            <h2>Buka pengaturan</h2>
+            <p class="hint">
+                Masukkan password tanggal hari ini. Contoh: 28 Oktober →
+                <code>2180</code> (d1m1d2m2).
+            </p>
+            <input id="unlockInput" type="password" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="••••" aria-label="Password unlock">
+            <p class="lock-error hidden" id="unlockError"></p>
+            <div class="lock-actions">
+                <button class="btn ghost" id="unlockCancelBtn" type="button">Batal</button>
+                <button class="btn primary" id="unlockSubmitBtn" type="submit">Buka</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script src="/app.js?v=20261028b"></script>
+</body>
+</html>
